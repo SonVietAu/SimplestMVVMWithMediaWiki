@@ -1,4 +1,4 @@
-#Simplest MVVM
+# Simplest MVVM
 
 This is the simplest implementation of MVVM for Android. The project was created as a goal to mastering MVVM for Android. <BR>
 
