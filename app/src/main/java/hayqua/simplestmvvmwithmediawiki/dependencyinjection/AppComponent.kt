@@ -26,26 +26,22 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ *
  */
 
-package hayqua.simplestmvvmwithmediawiki
+package hayqua.simplestmvvmwithmediawiki.dependencyinjection
 
-import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.ViewModel
+import dagger.Component
+import hayqua.simplestmvvmwithmediawiki.viewmodels.DetailViewModel
+import hayqua.simplestmvvmwithmediawiki.viewmodels.SimplestMVVMViewModel
+import javax.inject.Singleton
 
 
-/**
- * Created by Son Au on 18/03/2018.
- */
-class SimplestMVVMViewModel : ViewModel() {
-
-    val userRepo: MediaWikiRepository by lazy { MediaWikiRepository() }
-
-    // Use live data to display stuffs on the mainTV
-    val dataToDisplay: MutableLiveData<String> by lazy { userRepo.dataToDisplay }
-
-    fun searchWiki(query: String) {
-        userRepo.searchWiki(query)
-    }
+@Singleton
+@Component(modules = [
+    AppModule::class,
+    SimplestDIModule::class])
+interface AppComponent {
+    fun inject(target: SimplestMVVMViewModel)
+    fun inject(target: DetailViewModel)
 }
-

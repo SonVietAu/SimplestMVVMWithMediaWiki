@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Son Viet Au
+ * Copyright (c) 2017 Razeware LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,41 +28,6 @@
  * THE SOFTWARE.
  */
 
-package hayqua.simplestmvvmwithmediawiki
+package hayqua.simplestmvvmwithmediawiki.models.dataclasses
 
-import android.arch.lifecycle.ViewModelProviders
-import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
-import android.view.View
-import android.widget.TextView
-import kotlinx.android.synthetic.main.activity_main.*
-
-
-class MainActivity : AppCompatActivity() {
-
-    val viewModel by lazy { ViewModelProviders.of(this).get(SimplestMVVMViewModel::class.java) }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        // Create the observer which updates the UI.
-        val nameObserver = object : android.arch.lifecycle.Observer<String> {
-            override fun onChanged(t: String?) {
-                mainTV.text = t
-            }
-        }
-
-        // Observe the LiveData, passing in this activity as the LifecycleOwner and the observer.
-        viewModel.dataToDisplay.observe(this, nameObserver)
-
-    }
-
-    fun searchWiki(clickedView: View) {
-
-        val query = findViewById<TextView>(R.id.keywordET).text.toString()
-        viewModel.searchWiki(query)
-
-    }
-}
-
+data class Entry(val title: String, val snippet: String)

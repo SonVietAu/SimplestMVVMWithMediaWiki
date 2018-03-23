@@ -28,32 +28,25 @@
  * THE SOFTWARE.
  */
 
-package hayqua.simplestmvvmwithmediawiki
+package hayqua.simplestmvvmwithmediawiki.models
 
-import android.arch.lifecycle.MutableLiveData
-import android.os.Build
-import android.text.Html
-import android.text.Spanned
-import okhttp3.*
-import org.json.JSONObject
-import java.io.IOException
-
+import okhttp3.Call
+import okhttp3.HttpUrl
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import javax.inject.Inject
 
 /**
  * Created by Son Au on 18/03/2018. Modified/Extracted from RayWenderlich.com, 'Dependency Injection in Android with Dagger 2 and Kotlin' tutorial by Joe Howard and Dario Coletto. Thanks Ray, Joe and Dario :)
  */
-class MediaWikiRepository {
+class MediaWikiRepository @Inject constructor(private val client: OkHttpClient) {
 
     private val PROTOCOL = "https"
     private val LANGUAGE = "en"
     private val BASE_URL = "wikipedia.org/w/api.php"
+    private val SUMMARY_URL = "wikipedia.org/api/rest_v1/page/summary"
 
-    val dataToDisplay: MutableLiveData<String> by lazy { MutableLiveData<String>() }
-
-    // Search Wiki and then change the dataToDisplay on obtaining a response or a failure
-    fun searchWiki(query: String) {
-
-        val client = OkHttpClient()
+    fun getSearchWikiCall(query: String): Call {
         val requestBuilder = HttpUrl.parse("${PROTOCOL}://${LANGUAGE}.${BASE_URL}")?.newBuilder()
 
         val urlBuilder = requestBuilder
@@ -62,56 +55,27 @@ class MediaWikiRepository {
                 ?.addQueryParameter("format", "json")
                 ?.addQueryParameter("srsearch", query)
 
-        Request.Builder()
+        return Request.Builder()
                 .url(urlBuilder?.build())
                 .get()
                 .build()
                 .let {
                     client.newCall(it)
                 }
-                .enqueue(object : Callback {
-                    override fun onResponse(call: Call?, response: Response?) {
-                        //Everything is ok, show the result if not null
-                        if (response?.isSuccessful == true) {
-
-                            response.body()?.string()?.let {
-                                JSONObject(it)
-                                        .getJSONObject("query")
-                                        .getJSONArray("search")
-                                        .let { array ->
-
-                                            val entriesSB = StringBuffer()
-                                            (0 until array.length()).map {
-                                                val wikiData = array.getJSONObject(it)
-                                                entriesSB.append("${wikiData.getString("title")}: ${wikiData.getString("snippet").parseHtml()}, \n")
-                                            }
-                                            dataToDisplay.postValue("response is successful: \n${entriesSB}")
-
-                                        }
-                            }
-
-                        } else {
-                            dataToDisplay.postValue("response is not successful: ${response?.message()}")
-                        }
-                    }
-
-                    override fun onFailure(call: Call?, t: IOException?) {
-
-                        dataToDisplay.postValue(t?.message)
-                        t?.printStackTrace()
-
-                    }
-                })
-
     }
-}
 
-fun String?.parseHtml(): Spanned {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        return Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
-    } else {
-        @Suppress("deprecation")
-        return Html.fromHtml(this)
+    fun getSummaryCall(title: String): Call {
+
+        val requestURLBuilder = HttpUrl.parse("${PROTOCOL}://${LANGUAGE}.${SUMMARY_URL}/$title")?.newBuilder()
+
+        // OkHttpClient will be use a second time in this object, will inject
+        return Request.Builder()
+                .url(requestURLBuilder?.build())
+                .get()
+                .build()
+                .let {
+                    client.newCall(it)
+                }
     }
 }
 
