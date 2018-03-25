@@ -35,12 +35,15 @@ import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.MutableLiveData
 import hayqua.simplestmvvmwithmediawiki.SimplestMVVMApplication
 import hayqua.simplestmvvmwithmediawiki.models.MediaWikiRepository
-import hayqua.simplestmvvmwithmediawiki.models.dataclasses.Entry
+import hayqua.simplestmvvmwithmediawiki.room.entities.Entry
+import hayqua.simplestmvvmwithmediawiki.room.entities.Search
+import hayqua.simplestmvvmwithmediawiki.utils.getByKeywords
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
+import java.util.*
 import javax.inject.Inject
 
 
@@ -56,51 +59,80 @@ class SimplestMVVMViewModel(application: Application) : AndroidViewModel(applica
     // Use live data to display stuffs on the mainTV
     val messageToDisplay: MutableLiveData<String> = MutableLiveData()
 
+    val searchedKeywords: MutableLiveData<Vector<Search>> = MutableLiveData()
+
     // Search result
     val searchWikiResult: MutableLiveData<List<Entry?>> = MutableLiveData()
 
     init {
         getApplication<SimplestMVVMApplication>().daggerAppComponent.inject(this)
+
+        Thread {
+            val persistedKeywordsV = Vector<Search>()
+            getApplication<SimplestMVVMApplication>().db.searchDao().getAll().let {list ->
+                (0 until list.size).map {index ->
+                    persistedKeywordsV.addElement(list.get(index))
+                }
+            }
+            searchedKeywords.postValue(persistedKeywordsV)
+        }.start()
     }
 
     fun searchWiki2(query: String) {
 
-        mediaWikiRepo.getSearchWikiCall(query).enqueue(object : Callback {
-            override fun onResponse(call: Call?, response: Response?) {
-                //Everything is ok, show the result if not null
-                var list: List<Entry?>? = null
-                if (response?.isSuccessful == true) {
-
-                    list = response.body()?.string()?.let {
-                        JSONObject(it)
-                                .getJSONObject("query")
-                                .getJSONArray("search")
-                                .let { array ->
-                                    (0 until array.length()).map {
-                                        array.getJSONObject(it)
-                                    }.map {
-                                        Entry(it.getString("title"), it.getString("snippet"))
-                                    }
-                                }
-                    }
-
-                    messageToDisplay.postValue("Search completed successfully")
-
-                } else {
-                    messageToDisplay.postValue("Search was not successful: ${response?.message()}")
-                }
-                if (list == null) list = List(0, { null })
+        val search = searchedKeywords.value!!.getByKeywords(query)
+        if (search != null) {
+            Thread {
+                val list = getApplication<SimplestMVVMApplication>().db.entryDao().getSearchedEntries(search.id)
                 searchWikiResult.postValue(list)
-            }
+            }.start()
 
-            override fun onFailure(call: Call?, t: IOException?) {
+        } else {
+            mediaWikiRepo.getSearchWikiCall(query).enqueue(object : Callback {
+                override fun onResponse(call: Call?, response: Response?) {
+                    //Everything is ok, show the result if not null
+                    var list: List<Entry?>? = null
+                    if (response?.isSuccessful == true) {
 
-                searchWikiResult.postValue(List(0, { Entry("abc", "def") }))
-                messageToDisplay.postValue("Search was not successful: ${t?.message}")
-                t?.printStackTrace()
+                        val newSearch = Search(query)
+                        searchedKeywords.value!!.addElement(newSearch)
+                        newSearch.id = getApplication<SimplestMVVMApplication>().db.searchDao().insert(newSearch)
 
-            }
-        })
+                        list = response.body()?.string()?.let {
+                            JSONObject(it)
+                                    .getJSONObject("query")
+                                    .getJSONArray("search")
+                                    .let { array ->
+                                        (0 until array.length()).map {
+                                            array.getJSONObject(it)
+                                        }.map {
+                                            val entry = Entry(it.getString("title"), it.getString("snippet"), newSearch.id)
+                                            getApplication<SimplestMVVMApplication>().db.entryDao().insert(entry)
+                                            entry
+                                        }
+                                    }
+                        }
+
+                        messageToDisplay.postValue("Search completed successfully")
+
+                    } else {
+                        messageToDisplay.postValue("Search was not successful: ${response?.message()}")
+                    }
+                    if (list == null) list = List(0, { null })
+                    searchWikiResult.postValue(list)
+                }
+
+                override fun onFailure(call: Call?, t: IOException?) {
+
+                    searchWikiResult.postValue(List(0, { Entry("abc", "def", 0) }))
+                    messageToDisplay.postValue("Search was not successful: ${t?.message}")
+                    t?.printStackTrace()
+
+                }
+            })
+
+        }
+
     }
 
 }

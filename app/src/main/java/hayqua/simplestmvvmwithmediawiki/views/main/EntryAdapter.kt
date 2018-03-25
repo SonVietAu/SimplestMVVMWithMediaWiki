@@ -38,7 +38,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import hayqua.simplestmvvmwithmediawiki.R
-import hayqua.simplestmvvmwithmediawiki.models.dataclasses.Entry
+import hayqua.simplestmvvmwithmediawiki.room.entities.Entry
 import hayqua.simplestmvvmwithmediawiki.utils.parseHtml
 import hayqua.simplestmvvmwithmediawiki.views.detail.DetailActivity
 

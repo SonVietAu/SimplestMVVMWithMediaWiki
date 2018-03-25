@@ -33,6 +33,8 @@ package hayqua.simplestmvvmwithmediawiki.utils
 import android.os.Build
 import android.text.Html
 import android.text.Spanned
+import hayqua.simplestmvvmwithmediawiki.room.entities.Search
+import java.util.*
 
 /**
  * Created by Son Au on 20/03/2018.
@@ -46,3 +48,16 @@ fun String?.parseHtml(): Spanned {
     }
 }
 
+fun Vector<Search>?.getByKeywords(keywords: String): Search? {
+
+    this.let {vector ->
+        if (vector != null && vector.size >= 0) {
+            (0 until vector.size).forEach { index ->
+                if (vector.get(index).keywords.equals(keywords))
+                    return vector.get(index)
+            }
+        }
+    }
+
+    return null
+}

@@ -47,4 +47,8 @@ dependencies {
     kapt 'com.google.dagger:dagger-compiler:2.11'
     provided 'javax.annotation:jsr250-api:1.0'
 
+    // Room (use 1.1.0-beta1 for latest beta)
+    implementation "android.arch.persistence.room:runtime:1.0.0"
+    kapt "android.arch.persistence.room:compiler:1.0.0"
+
 }

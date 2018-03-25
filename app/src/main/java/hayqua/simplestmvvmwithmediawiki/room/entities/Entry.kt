@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Razeware LLC
+ * Copyright (c) 2017 Son Viet Au
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,25 @@
  * THE SOFTWARE.
  */
 
-package hayqua.simplestmvvmwithmediawiki.models.dataclasses
+package hayqua.simplestmvvmwithmediawiki.room.entities
 
-data class Entry(val title: String, val snippet: String)
+import android.arch.persistence.room.ColumnInfo
+import android.arch.persistence.room.Entity
+import android.arch.persistence.room.ForeignKey
+import android.arch.persistence.room.PrimaryKey
+
+@Entity(
+        tableName = "entries",
+        foreignKeys = [(ForeignKey(entity = Search::class, parentColumns = ["id"], childColumns = ["search_id"]))]
+)
+data class Entry(
+        @PrimaryKey
+        @ColumnInfo(name = "title")
+        val title: String,
+
+        @ColumnInfo(name = "snippet")
+        val snippet: String,
+
+        @ColumnInfo(name = "search_id")
+        val searchId: Long
+)

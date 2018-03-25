@@ -32,14 +32,12 @@ package hayqua.simplestmvvmwithmediawiki.views.main
 
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
-import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.view.View
-import android.widget.TextView
 import hayqua.simplestmvvmwithmediawiki.R
-import hayqua.simplestmvvmwithmediawiki.models.dataclasses.Entry
+import hayqua.simplestmvvmwithmediawiki.room.entities.Entry
 import hayqua.simplestmvvmwithmediawiki.viewmodels.SimplestMVVMViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -77,7 +75,7 @@ class MainActivity : AppCompatActivity() {
 
     fun searchWiki(clickedView: View) {
 
-        val query = findViewById<TextView>(R.id.keywordET).text.toString()
+        val query = keywordET.text.toString()
         viewModel.searchWiki2(query)
 
     }
